@@ -12,8 +12,9 @@ The repository has these files integrated. The live config keeps `[lock] enabled
 `dry_run = true`; lock mode must not close windows until its dry-run checks and Phase 1a tracking
 checks pass.
 
-Pytest is configured to collect the canonical suite under `daemon/tests/`; the original package
-copy under `phase3a/` is retained as reference input and is not collected twice.
+The duplicate `phase3a/` source copy and the temporary `pytest.ini` workaround were removed after
+the integration commit. The original bundle remains available in Git history, and the canonical
+suite runs directly from `daemon/tests/`.
 
 The runner, migration, CLI script, and safe config defaults are already integrated. The full
 automated suite currently has 29 tests. After changing source, use `.venv/bin/pip install -e .`,

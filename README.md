@@ -9,7 +9,7 @@ and until the goal is met it restricts distracting apps. Your AI assistant knows
 keeps you accountable. A consent-gated online dashboard lets one trusted person (your partner)
 see your progress and send you motivation.
 
-**Status:** Phases 0, 1b, 1c are written (tracker, idle detection, tests, autostart). Phase 1a needs a full-session accuracy and reboot check on the real machine. Phase 2 is verified in real Brave. Phase 3a lock engine is integrated, migrated to schema v2, and remains disabled by default; its real Hyprland dry-run checklist is still open.
+**Status:** Phases 0, 1b, 1c are written (tracker, idle detection, tests, autostart). Phase 1a needs a full-session accuracy and reboot check on the real machine. Phase 2 is verified in real Brave. Phase 3a lock engine is integrated, migrated to schema v2, and its real Hyprland dry-run checklist passed. Lock mode remains disabled by default.
 **Personal use only.** Read `docs/PRIVACY.md` before building any remote feature.
 
 ## Features (planned, see ROADMAP.md)

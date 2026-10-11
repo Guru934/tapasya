@@ -52,8 +52,8 @@ Data flow: sampler writes `samples` every N seconds -> minutes studied = counted
       close limit, and fail-open handling
 - [x] Delayed emergency override CLI and event history
 - [x] Schema v2 migration adds `overrides` and `lock_events` without dropping existing data
-- [ ] Run the dry-run integration checklist in `INTEGRATION.md` on real Hyprland
-- [ ] Verify allowed apps, goal-met behavior, and delayed override in dry-run mode
+- [x] Run the dry-run integration checklist in `INTEGRATION.md` on real Hyprland
+- [x] Verify allowed apps, goal-met behavior, and delayed override in dry-run mode
 - [ ] Test real closing only after dry-run and Phase 1a accuracy/reboot checks pass
 ### Phase 3b: UI
 - [ ] Quickshell overlay: progress ring, minutes left, "goal met" unlock animation

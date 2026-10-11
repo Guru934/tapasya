@@ -8,9 +8,8 @@ Tapasya is a local, personal study tracker for CachyOS, Hyprland, and Brave. It 
 focused window every five seconds and saves each result to SQLite. A group of rows with the same
 `app_class`, `domain`, and `counted` values is normal: each row is one five-second sample.
 
-Phase 3a lock mode is integrated locally. Locking remains disabled in the live config. The latest
-published project state is commit `760f8bf`; the current Phase 3a integration has not yet been
-committed or pushed.
+Phase 3a lock mode is integrated and pushed to `main` in commit `359145d`. Locking remains disabled
+in the live config.
 
 ## What has been built
 
@@ -83,8 +82,24 @@ committed or pushed.
 - The live database was upgraded to schema version 2; both lock tables exist and the 2,515
   existing sample rows remained present at verification time.
 - Restarted systemd service is active; journal shows the API started and `lock: disabled`.
-- The real Hyprland dry-run checklist has not yet been completed. Real window closing remains
-  disabled and must wait for Phase 1a stopwatch accuracy and reboot checks.
+- Real window closing remains disabled and must wait for Phase 1a stopwatch accuracy and reboot
+  checks.
+
+### Real Hyprland dry-run (2026-10-11)
+
+- Enabled lock mode temporarily with `dry_run = true`, set the goal to 600, and restarted the
+  user service. Journal confirmed `lock: ON (DRY-RUN)`; the service remained active.
+- Opened Thunar after startup grace. The event log recorded `warn` followed by `would_close`; the
+  Thunar window remained open. Brave and kitty did not appear in the test events.
+- The first pass exposed the editor's real Hyprland class as `com.microsoft.VSCode`; the existing
+  allow list only named `code`/`Code`, so the editor was initially logged as a dry-run offender.
+  Added `com.microsoft.VSCode` to the example and local allow lists. It did not appear in the
+  subsequent test run.
+- Set the goal to 1 with 38 minutes already counted. Status showed `GOAL MET`, and no new lock
+  events were recorded during the following check interval.
+- Requested an override, confirmed its pending state, and canceled it successfully.
+- Restored the live goal to 120 and lock mode to disabled (`dry_run = true`); restarted the
+  service and confirmed it active with lock OFF. Real window closing was never enabled.
 
 ## Known limits and deferred cleanup
 
@@ -100,10 +115,8 @@ committed or pushed.
 
 ## Next steps
 
-1. Run `INTEGRATION.md` dry-run and override checks on real Hyprland while the live config remains
-   `enabled = true`, `dry_run = true` only for the test window.
-2. Complete the Phase 1a stopwatch accuracy and reboot checks. Do not enable real window closing
+1. Complete the Phase 1a stopwatch accuracy and reboot checks. Do not enable real window closing
    until tracking is within about 5% and both checks pass.
-3. Continue with Phase 3b UI and Phase 3c rewards after Phase 3a is verified.
+2. Continue with Phase 3b UI and Phase 3c rewards after Phase 1a fairness checks pass.
 
 The emergency override is mandatory: lock mode must never trap the owner out of the PC.

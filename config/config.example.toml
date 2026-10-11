@@ -14,7 +14,7 @@ browser_classes = ["brave-browser", "Brave-browser"]   # site rules apply only t
 require_extension = false    # true = Brave counts ONLY when the extension reports an allowed site
 tab_stale_seconds = 90       # extension info older than this is ignored
 # Always-allowed apps (never locked) - used from Phase 3
-always_allowed_classes = ["kitty", "foot", "code", "Code", "brave-browser", "Brave-browser"]
+always_allowed_classes = ["kitty", "foot", "code", "Code", "com.microsoft.VSCode", "brave-browser", "Brave-browser"]
 
 [study_sites]                # used from Phase 2 (Brave extension)
 allow = ["docs.python.org", "developer.mozilla.org", "github.com", "stackoverflow.com"]
