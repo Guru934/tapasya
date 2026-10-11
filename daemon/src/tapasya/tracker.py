@@ -10,8 +10,10 @@ from __future__ import annotations
 import glob
 import json
 import os
+import signal
 import subprocess
 import sys
+import threading
 import time
 
 from . import api, db, rules
@@ -48,6 +50,13 @@ def cursor_pos() -> tuple | None:
     return None
 
 
+def make_stop_handler(stop: threading.Event):
+    """Return a SIGTERM/SIGINT handler that stops the tracker loop."""
+    def handler(_signum, _frame) -> None:
+        stop.set()
+    return handler
+
+
 def decide(cls: str, idle: bool, tab: dict | None, cfg: dict) -> tuple[bool, str | None]:
     """Pure decision function (testable). Returns (counted, domain)."""
     t = cfg["tracking"]
@@ -70,6 +79,11 @@ def run(cfg: dict) -> None:
     step = cfg["tracking"]["sample_seconds"]
     monitor = ActivityMonitor(cfg["tracking"]["idle_seconds"])
     state = api.TabState(cfg["tracking"].get("tab_stale_seconds", 90))
+    stop = threading.Event()
+    signals = (signal.SIGTERM, signal.SIGINT)
+    previous_handlers = {signum: signal.getsignal(signum) for signum in signals}
+    for signum in signals:
+        signal.signal(signum, make_stop_handler(stop))
 
     def status() -> dict:
         c = db.connect(db_path)  # own connection: this runs in the API thread
@@ -82,17 +96,27 @@ def run(cfg: dict) -> None:
             c.close()
 
     host, port = cfg.get("api", {}).get("host", "127.0.0.1"), cfg.get("api", {}).get("port", 8765)
+    server = None
     try:
-        api.start_in_thread(api.make_server(state, host, port, status))
+        server = api.make_server(state, host, port, status)
+        api.start_in_thread(server)
         print(f"[tapasya] API on http://{host}:{port}")
     except OSError as e:
         print(f"[tapasya] WARNING: API NOT STARTED ({e}). Brave extension will NOT work.", file=sys.stderr, flush=True)
 
-    print(f"[tapasya] tracking every {step}s, idle after {cfg['tracking']['idle_seconds']}s.")
-    while True:
-        win = active_window()
-        cls, title = win.get("class", ""), win.get("title", "")
-        idle = monitor.update(cursor_pos(), cls, title, time.monotonic())
-        counted, domain = decide(cls, idle, state.current(), cfg)
-        db.add_sample(conn, cls, title, domain, counted)
-        time.sleep(step)
+    try:
+        print(f"[tapasya] tracking every {step}s, idle after {cfg['tracking']['idle_seconds']}s.")
+        while not stop.is_set():
+            win = active_window()
+            cls, title = win.get("class", ""), win.get("title", "")
+            idle = monitor.update(cursor_pos(), cls, title, time.monotonic())
+            counted, domain = decide(cls, idle, state.current(), cfg)
+            db.add_sample(conn, cls, title, domain, counted)
+            stop.wait(step)
+    finally:
+        if server is not None:
+            server.shutdown()
+            server.server_close()
+        conn.close()
+        for signum, handler in previous_handlers.items():
+            signal.signal(signum, handler)

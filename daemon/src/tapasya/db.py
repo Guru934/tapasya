@@ -15,6 +15,8 @@ def connect(db_path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(p)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA.read_text())
+    conn.execute("INSERT OR IGNORE INTO meta(key,value) VALUES('schema_version','1')")
+    conn.commit()
     return conn
 
 

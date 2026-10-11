@@ -1,7 +1,10 @@
 import sqlite3
+import signal
+import threading
 
 from tapasya import db
 from tapasya.activity import ActivityMonitor, is_counted
+from tapasya import tracker
 
 
 def make_conn(tmp_path):
@@ -24,6 +27,18 @@ def test_goal_default_and_override(tmp_path):
     assert db.get_goal(conn, db.today(), 120) == 90
     db.set_goal(conn, db.today(), 150)       # update, not duplicate
     assert db.get_goal(conn, db.today(), 120) == 150
+
+
+def test_connect_records_schema_version(tmp_path):
+    conn = make_conn(tmp_path)
+    row = conn.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()
+    assert row[0] == "1"
+
+
+def test_stop_handler_sets_stop_event():
+    stop = threading.Event()
+    tracker.make_stop_handler(stop)(signal.SIGTERM, None)
+    assert stop.is_set()
 
 
 def test_is_counted_rules():

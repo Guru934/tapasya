@@ -22,7 +22,7 @@ Data flow: sampler writes `samples` every N seconds -> minutes studied = counted
 
 ## Phase 1: Reliable tracking (PC only)
 **1a**
-- [ ] Verify Brave window class on the machine; set in `config.toml`
+- [x] Verify Brave window class on the machine; set in `config.toml`
 - [ ] Run `tapasya run` for a full session, confirm `status` matches real time
 **1b**
 - [x] Idle detection (heuristic: cursor/window/title unchanged for `idle_seconds`) in `activity.py`
@@ -39,9 +39,9 @@ Data flow: sampler writes `samples` every N seconds -> minutes studied = counted
 - [x] Rules engine (`rules.py`) from config: `allow` counts, `block` never counts, mixed sites (youtube.com)
       count only if the title matches `study_keywords`
 - [x] Count only when the Brave window is focused AND the active tab is allowed (`tracker.decide`)
-- Manual check on 2026-10-11: GitHub counted, Instagram did not, and a YouTube tab titled
-  `lecture` counted; unrelated YouTube titles did not. Still verify that an audible lecture keeps
-  counting after `idle_seconds`, and that a YouTube Short never counts.
+- Manual check on 2026-10-11: GitHub counted, Instagram and a YouTube Short did not, and YouTube
+  tabs titled `lecture` and `Python tutorial` counted. The three-minute tutorial was exactly the
+  default `idle_seconds`, so it does not verify audible playback past the idle timeout.
 - Done when: Instagram in Brave adds 0 minutes, docs.python.org adds minutes, a lecture on
   YouTube counts through the idle timeout, and Shorts do not.
 

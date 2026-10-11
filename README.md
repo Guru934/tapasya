@@ -9,7 +9,7 @@ and until the goal is met it restricts distracting apps. Your AI assistant knows
 keeps you accountable. A consent-gated online dashboard lets one trusted person (your partner)
 see your progress and send you motivation.
 
-**Status:** Phases 0, 1b, 1c are written (tracker, idle detection, tests, autostart). Phase 1a needs a full-session accuracy check on the real machine. Phase 2 (Brave extension + site rules) is implemented and partially verified in real Brave: GitHub counts, Instagram does not, and YouTube counts only when its title has a study keyword. Verify an audible lecture through the idle timeout and a YouTube Short before starting Phase 3.
+**Status:** Phases 0, 1b, 1c are written (tracker, idle detection, tests, autostart). Phase 1a needs a full-session accuracy and reboot check on the real machine. Phase 2 (Brave extension + site rules) is implemented and partially verified in real Brave: GitHub counts, Instagram and Shorts do not, and YouTube counts only when its title has a study keyword. Verify an audible lecture for more than the 180-second idle timeout before starting Phase 3.
 **Personal use only.** Read `docs/PRIVACY.md` before building any remote feature.
 
 ## Features (planned, see ROADMAP.md)
@@ -25,6 +25,7 @@ see your progress and send you motivation.
 tapasya/
 ├── README.md              # this file
 ├── ROADMAP.md             # phases, tasks, acceptance criteria (source of truth)
+├── project_status.md      # implementation, validation, known limits, and next steps
 ├── AGENTS.md              # instructions for any AI continuing the work
 ├── pyproject.toml         # Python package, `tapasya` command
 ├── .gitignore

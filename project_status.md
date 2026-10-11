@@ -58,18 +58,22 @@ The implementation through Phase 2 is on `main` in commit `d57827e`
 - Instagram samples did not count.
 - A YouTube tab titled `lecture` counted; unrelated YouTube titles did not count because they did
   not contain configured study keywords.
-- The owner played a Python tutorial for three minutes and observed counted samples.
+- The owner played a Python tutorial for three minutes and observed counted samples. This was not
+  long enough to verify audible playback beyond the default 180-second idle timeout.
 - The owner opened a YouTube Short and observed uncounted samples.
 
 ## Known limits and deferred cleanup
 
 - Phase 1a still needs a full-session accuracy check against real study time and a reboot check.
-- The tracker does not yet handle SIGTERM/SIGINT gracefully. Samples are committed immediately,
-  so stopping the service does not lose already-recorded samples.
+- Run an audible lecture for at least six minutes without mouse or keyboard input. Its samples
+  must continue to have `counted = 1` after the 180-second idle timeout.
+- The tracker handles SIGTERM/SIGINT by stopping its loop and closing its API server and database
+  connection. Samples are committed immediately, so stopping the service does not lose
+  already-recorded samples.
 - `config.py` currently assumes the installed repository layout. Add `TAPASYA_CONFIG` and
   `~/.config/tapasya/config.toml` lookup before Phase 5.
-- The database `meta` table has no `schema_version` entry yet. Add schema version `1` before
-  Phase 5 and preserve user data during future migrations.
+- Database initialization records `meta.schema_version = 1`. Preserve user data during all future
+  schema migrations.
 - Extension behavior is tested only in the owner's current Brave/Hyprland setup.
 
 ## Next phase: Phase 3 lock mode and rewards
