@@ -1,7 +1,9 @@
 """Tracker: poll the focused Hyprland window and count study time.
 
-Counts a sample only when a study window is focused AND the user is not idle.
-TODO (Phase 2): read current Brave domain/title from the extension and apply study_sites rules.
+A sample counts when: a study window is focused, the user is not idle, and (for browsers)
+the active tab passes the site rules reported by the Brave extension.
+If the extension is not running: falls back to "Brave focused = counts" unless
+tracking.require_extension = true.
 """
 from __future__ import annotations
 
@@ -9,9 +11,10 @@ import glob
 import json
 import os
 import subprocess
+import sys
 import time
 
-from . import db
+from . import api, db, rules
 from .activity import ActivityMonitor, is_counted
 
 
@@ -34,7 +37,6 @@ def _hyprctl_json(*args: str) -> dict:
 
 
 def active_window() -> dict:
-    """Return {'class': str, 'title': str} for the focused window ({} if none)."""
     data = _hyprctl_json("activewindow")
     return {"class": data.get("class", ""), "title": data.get("title", "")}
 
@@ -46,16 +48,51 @@ def cursor_pos() -> tuple | None:
     return None
 
 
+def decide(cls: str, idle: bool, tab: dict | None, cfg: dict) -> tuple[bool, str | None]:
+    """Pure decision function (testable). Returns (counted, domain)."""
+    t = cfg["tracking"]
+    study_classes = set(t["study_window_classes"])
+    browsers = set(t.get("browser_classes", ["brave-browser", "Brave-browser"]))
+    idle = idle and not bool(tab and tab.get("audible"))
+    counted = is_counted(cls, study_classes, idle)
+    if not counted or cls not in browsers:
+        return counted, None
+    if tab is None:
+        return (not t.get("require_extension", False)), None
+    ok, _reason = rules.classify(tab["domain"], tab["title"], tab["shorts"], cfg.get("study_sites", {}))
+    return ok, tab["domain"] or None
+
+
 def run(cfg: dict) -> None:
     ensure_hypr_env()
-    conn = db.connect(cfg["storage"]["db_path"])
+    db_path = cfg["storage"]["db_path"]
+    conn = db.connect(db_path)
     step = cfg["tracking"]["sample_seconds"]
-    study_classes = set(cfg["tracking"]["study_window_classes"])
     monitor = ActivityMonitor(cfg["tracking"]["idle_seconds"])
-    print(f"[tapasya] tracking every {step}s, idle after {cfg['tracking']['idle_seconds']}s. Ctrl+C to stop.")
+    state = api.TabState(cfg["tracking"].get("tab_stale_seconds", 90))
+
+    def status() -> dict:
+        c = db.connect(db_path)  # own connection: this runs in the API thread
+        try:
+            day = db.today()
+            return {"day": day,
+                    "goal_minutes": db.get_goal(c, day, cfg["goal"]["daily_minutes"]),
+                    "studied_minutes": round(db.studied_minutes(c, day, step), 1)}
+        finally:
+            c.close()
+
+    host, port = cfg.get("api", {}).get("host", "127.0.0.1"), cfg.get("api", {}).get("port", 8765)
+    try:
+        api.start_in_thread(api.make_server(state, host, port, status))
+        print(f"[tapasya] API on http://{host}:{port}")
+    except OSError as e:
+        print(f"[tapasya] WARNING: API NOT STARTED ({e}). Brave extension will NOT work.", file=sys.stderr, flush=True)
+
+    print(f"[tapasya] tracking every {step}s, idle after {cfg['tracking']['idle_seconds']}s.")
     while True:
         win = active_window()
         cls, title = win.get("class", ""), win.get("title", "")
         idle = monitor.update(cursor_pos(), cls, title, time.monotonic())
-        db.add_sample(conn, cls, title, None, is_counted(cls, study_classes, idle))
+        counted, domain = decide(cls, idle, state.current(), cfg)
+        db.add_sample(conn, cls, title, domain, counted)
         time.sleep(step)

@@ -34,14 +34,16 @@ Data flow: sampler writes `samples` every N seconds -> minutes studied = counted
 - Done when: a full day of normal use gives study minutes within about 5% of reality, and survives reboot.
 
 ## Phase 2: Brave extension (know WHAT you study)
-- [ ] MV3 extension in `extension/`: on tab activate/update, send `{domain, title, ts}` to
-      the local API (`POST /v1/tab`) or native messaging
-- [ ] Daemon stores `domain`/`title` on each sample
-- [ ] Rules engine from config: `allow` counts, `block` never counts, mixed sites (youtube.com)
+- [x] MV3 extension in `extension/` sends `{domain, title, shorts, audible}` to `POST /v1/tab` (partially verified in real Brave)
+- [x] Daemon stores `domain`/`title` on each sample (`api.py`, `tracker.py`)
+- [x] Rules engine (`rules.py`) from config: `allow` counts, `block` never counts, mixed sites (youtube.com)
       count only if the title matches `study_keywords`
-- [ ] Count only when the Brave window is focused AND the active tab is allowed
+- [x] Count only when the Brave window is focused AND the active tab is allowed (`tracker.decide`)
+- Manual check on 2026-10-11: GitHub counted, Instagram did not, and a YouTube tab titled
+  `lecture` counted; unrelated YouTube titles did not. Still verify that an audible lecture keeps
+  counting after `idle_seconds`, and that a YouTube Short never counts.
 - Done when: Instagram in Brave adds 0 minutes, docs.python.org adds minutes, a lecture on
-  YouTube counts but Shorts do not.
+  YouTube counts through the idle timeout, and Shorts do not.
 
 ## Phase 3: Lock mode and rewards
 - [ ] Local API (Phase 3 needs it; see Phase 4 endpoints) or direct DB read for lock engine

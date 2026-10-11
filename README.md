@@ -9,7 +9,7 @@ and until the goal is met it restricts distracting apps. Your AI assistant knows
 keeps you accountable. A consent-gated online dashboard lets one trusted person (your partner)
 see your progress and send you motivation.
 
-**Status:** Phases 0, 1b, 1c written (tracker, idle detection, tests, autostart). Phase 1a needs checking on the real machine. Next: Brave extension (Phase 2).
+**Status:** Phases 0, 1b, 1c are written (tracker, idle detection, tests, autostart). Phase 1a needs a full-session accuracy check on the real machine. Phase 2 (Brave extension + site rules) is implemented and partially verified in real Brave: GitHub counts, Instagram does not, and YouTube counts only when its title has a study keyword. Verify an audible lecture through the idle timeout and a YouTube Short before starting Phase 3.
 **Personal use only.** Read `docs/PRIVACY.md` before building any remote feature.
 
 ## Features (planned, see ROADMAP.md)
@@ -36,13 +36,15 @@ tapasya/
 │   ├── src/tapasya/
 │   │   ├── __init__.py
 │   │   ├── activity.py    # idle detection (heuristic)
+│   │   ├── api.py         # local HTTP API (127.0.0.1)
+│   │   ├── rules.py       # allow/block/mixed site rules
 │   │   ├── cli.py         # init | run | status | goal
 │   │   ├── config.py      # loads TOML config
 │   │   ├── db.py          # all SQLite access
 │   │   ├── schema.sql     # DB schema v1
 │   │   └── tracker.py     # focused-window sampler (Phase 1a)
-│   └── tests/test_core.py # pytest tests
-├── extension/             # Brave/Chromium MV3 extension (Phase 2, planned)
+│   └── tests/             # pytest tests
+├── extension/             # Brave MV3 tab reporter (load unpacked)
 ├── overlay/               # Quickshell QML overlay + bar pill (Phase 3, planned)
 ├── web/                   # Next.js PWA dashboard for the viewer (Phase 5, planned)
 └── scripts/               # install.sh + tapasya.service (autostart on login)
