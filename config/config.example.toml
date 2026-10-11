@@ -1,0 +1,27 @@
+# Copy to config/config.toml (git-ignored) and edit.
+
+[goal]
+daily_minutes = 120          # study goal per day
+reward_ratio = 0.5           # earn 0.5 min free time per 1 min studied (Phase 3)
+
+[tracking]
+sample_seconds = 5           # how often the focused window is checked
+idle_seconds = 180           # no mouse/window/title change for this long = idle, not counted
+                             # (keyboard-only reading looks idle; raise this if it undercounts)
+# Hyprland window classes that CAN count as study (check with: hyprctl activewindow -j)
+study_window_classes = ["brave-browser", "Brave-browser"]
+# Always-allowed apps (never locked) - used from Phase 3
+always_allowed_classes = ["kitty", "foot", "code", "Code", "brave-browser", "Brave-browser"]
+
+[study_sites]                # used from Phase 2 (Brave extension)
+allow = ["docs.python.org", "developer.mozilla.org", "github.com", "stackoverflow.com"]
+block = ["instagram.com", "x.com", "netflix.com"]
+# youtube.com is mixed: counts only if the page title matches study_keywords
+study_keywords = ["tutorial", "lecture", "course", "python", "dsa"]
+
+[api]
+host = "127.0.0.1"           # local only. Never bind 0.0.0.0 without auth (Phase 4+)
+port = 8765
+
+[storage]
+db_path = "~/.local/share/tapasya/tapasya.db"
