@@ -17,6 +17,8 @@ def connect(db_path: str) -> sqlite3.Connection:
     conn.executescript(SCHEMA.read_text())
     conn.execute("INSERT OR IGNORE INTO meta(key,value) VALUES('schema_version','1')")
     conn.commit()
+    from .migrations import migrate
+    migrate(conn)
     return conn
 
 

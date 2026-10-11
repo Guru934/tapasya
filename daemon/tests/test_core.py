@@ -29,10 +29,33 @@ def test_goal_default_and_override(tmp_path):
     assert db.get_goal(conn, db.today(), 120) == 150
 
 
-def test_connect_records_schema_version(tmp_path):
+def test_connect_records_current_schema_version(tmp_path):
     conn = make_conn(tmp_path)
     row = conn.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()
-    assert row[0] == "1"
+    assert row[0] == "2"
+
+
+def test_connect_applies_lock_schema_migration(tmp_path):
+    conn = make_conn(tmp_path)
+    assert conn.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()[0] == "2"
+    conn.execute("SELECT * FROM overrides")
+    conn.execute("SELECT * FROM lock_events")
+
+
+def test_lock_migration_preserves_existing_samples(tmp_path):
+    path = tmp_path / "legacy.db"
+    legacy = sqlite3.connect(path)
+    legacy.executescript(db.SCHEMA.read_text())
+    legacy.execute("INSERT INTO meta(key,value) VALUES('schema_version','1')")
+    legacy.execute(
+        "INSERT INTO samples(ts,day,app_class,title,domain,counted) VALUES(1,'2026-10-11','brave-browser','saved',NULL,1)"
+    )
+    legacy.commit()
+    legacy.close()
+
+    conn = db.connect(str(path))
+    assert conn.execute("SELECT title FROM samples WHERE id=1").fetchone()[0] == "saved"
+    assert conn.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()[0] == "2"
 
 
 def test_stop_handler_sets_stop_event():

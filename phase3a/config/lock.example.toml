@@ -1,0 +1,17 @@
+# Append this section to config/config.toml AND config/config.example.toml.
+# SAFE DEFAULTS: lock is OFF. When you turn it on, it starts in dry-run (logs only).
+
+[lock]
+enabled = false
+dry_run = true                 # true = only log "would close X". Set false ONLY after dry-run looks right
+check_seconds = 15
+warn_seconds = 45              # warning first; window closes only after this many seconds
+startup_grace_seconds = 120    # after the daemon starts/reboots, do nothing for this long
+max_closes_per_cycle = 2
+active_from = "06:00"          # lock only applies between these local times
+active_until = "23:00"
+override_delay_minutes = 10    # emergency override starts after this delay
+override_minutes = 60          # ...and lasts this long
+extra_allowed_classes = []     # add any app class that must never be closed
+# Allowed apps = [tracking] always_allowed_classes + study_window_classes + these.
+# Find a window's class with: hyprctl clients -j | grep '"class"'

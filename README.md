@@ -9,7 +9,7 @@ and until the goal is met it restricts distracting apps. Your AI assistant knows
 keeps you accountable. A consent-gated online dashboard lets one trusted person (your partner)
 see your progress and send you motivation.
 
-**Status:** Phases 0, 1b, 1c are written (tracker, idle detection, tests, autostart). Phase 1a needs a full-session accuracy and reboot check on the real machine. Phase 2 (Brave extension + site rules) has been verified in real Brave: GitHub counts, Instagram and Shorts do not, and an audible Python tutorial counted for 13 minutes without input.
+**Status:** Phases 0, 1b, 1c are written (tracker, idle detection, tests, autostart). Phase 1a needs a full-session accuracy and reboot check on the real machine. Phase 2 is verified in real Brave. Phase 3a lock engine is integrated, migrated to schema v2, and remains disabled by default; its real Hyprland dry-run checklist is still open.
 **Personal use only.** Read `docs/PRIVACY.md` before building any remote feature.
 
 ## Features (planned, see ROADMAP.md)
@@ -25,12 +25,14 @@ see your progress and send you motivation.
 tapasya/
 ├── README.md              # this file
 ├── ROADMAP.md             # phases, tasks, acceptance criteria (source of truth)
+├── INTEGRATION.md         # Phase 3a dry-run and real-mode test plan
 ├── project_status.md      # implementation, validation, known limits, and next steps
 ├── AGENTS.md              # instructions for any AI continuing the work
 ├── pyproject.toml         # Python package, `tapasya` command
 ├── .gitignore
 ├── config/
-│   └── config.example.toml   # copy to config.toml (git-ignored)
+│   ├── config.example.toml   # copy to config.toml (git-ignored)
+│   └── lock.example.toml     # safe Phase 3a lock defaults
 ├── docs/
 │   └── PRIVACY.md         # consent + security rules (binding)
 ├── daemon/                # Python backend (runs on the PC)
@@ -41,7 +43,11 @@ tapasya/
 │   │   ├── rules.py       # allow/block/mixed site rules
 │   │   ├── cli.py         # init | run | status | goal
 │   │   ├── config.py      # loads TOML config
-│   │   ├── db.py          # all SQLite access
+│   │   ├── db.py          # core SQLite access and connection setup
+│   │   ├── lock.py        # Phase 3a lock engine (off by default)
+│   │   ├── lock_store.py  # override and event SQL
+│   │   ├── lock_cli.py    # tapasya-lock emergency controls
+│   │   ├── migrations.py  # schema migrations
 │   │   ├── schema.sql     # DB schema v1
 │   │   └── tracker.py     # focused-window sampler (Phase 1a)
 │   └── tests/             # pytest tests

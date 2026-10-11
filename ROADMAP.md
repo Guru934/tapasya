@@ -46,13 +46,20 @@ Data flow: sampler writes `samples` every N seconds -> minutes studied = counted
   YouTube counts through the idle timeout, and Shorts do not.
 
 ## Phase 3: Lock mode and rewards
-- [ ] Local API (Phase 3 needs it; see Phase 4 endpoints) or direct DB read for lock engine
-- [ ] Lock engine: while goal not met, apps outside `always_allowed_classes` are closed with
-      `hyprctl dispatch closewindow` (warn first with a notification and a countdown)
+### Phase 3a: Lock engine (implemented; real-machine dry-run remains)
+- [x] Lock engine reads the database for goal and study state
+- [x] Disabled by default; dry-run mode, startup grace, active hours, allow list, warning delay,
+      close limit, and fail-open handling
+- [x] Delayed emergency override CLI and event history
+- [x] Schema v2 migration adds `overrides` and `lock_events` without dropping existing data
+- [ ] Run the dry-run integration checklist in `INTEGRATION.md` on real Hyprland
+- [ ] Verify allowed apps, goal-met behavior, and delayed override in dry-run mode
+- [ ] Test real closing only after dry-run and Phase 1a accuracy/reboot checks pass
+### Phase 3b: UI
 - [ ] Quickshell overlay: progress ring, minutes left, "goal met" unlock animation
 - [ ] Bar pill widget showing `done/goal`
+### Phase 3c: Rewards
 - [ ] Reward bank: `reward_ratio` minutes of free time per study minute; spending time pauses lock
-- [ ] Emergency override with a 10-minute delay, logged in DB (`overrides` table)
 - Done when: lock engages with an unmet goal, releases at goal, and override works without a reboot.
 
 ## Phase 4: Local API and AI assistant hooks

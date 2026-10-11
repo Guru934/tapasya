@@ -97,12 +97,19 @@ def run(cfg: dict) -> None:
 
     host, port = cfg.get("api", {}).get("host", "127.0.0.1"), cfg.get("api", {}).get("port", 8765)
     server = None
+    lock_thread = None
     try:
         server = api.make_server(state, host, port, status)
         api.start_in_thread(server)
         print(f"[tapasya] API on http://{host}:{port}")
     except OSError as e:
         print(f"[tapasya] WARNING: API NOT STARTED ({e}). Brave extension will NOT work.", file=sys.stderr, flush=True)
+
+    try:
+        from . import lock
+        lock_thread = lock.start_engine(cfg, stop)
+    except Exception as e:
+        print(f"[tapasya] WARNING: lock engine not started (failing open): {e}", file=sys.stderr, flush=True)
 
     try:
         print(f"[tapasya] tracking every {step}s, idle after {cfg['tracking']['idle_seconds']}s.")
@@ -114,6 +121,9 @@ def run(cfg: dict) -> None:
             db.add_sample(conn, cls, title, domain, counted)
             stop.wait(step)
     finally:
+        stop.set()
+        if lock_thread is not None:
+            lock_thread.join(timeout=15)
         if server is not None:
             server.shutdown()
             server.server_close()

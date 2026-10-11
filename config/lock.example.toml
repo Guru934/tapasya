@@ -1,0 +1,14 @@
+# Lock engine defaults. Disabled means it cannot close any windows.
+# If enabled, keep dry-run on until the dry-run checklist is verified.
+[lock]
+enabled = false
+dry_run = true
+check_seconds = 15
+warn_seconds = 45
+startup_grace_seconds = 120
+max_closes_per_cycle = 2
+active_from = "06:00"
+active_until = "23:00"
+override_delay_minutes = 10
+override_minutes = 60
+extra_allowed_classes = []

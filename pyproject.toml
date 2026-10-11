@@ -7,6 +7,7 @@ dependencies = []
 
 [project.scripts]
 tapasya = "tapasya.cli:main"
+tapasya-lock = "tapasya.lock_cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]

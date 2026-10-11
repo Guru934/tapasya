@@ -8,3 +8,4 @@ config/config.toml
 node_modules/
 .next/
 *.egg-info/
+.vscode/

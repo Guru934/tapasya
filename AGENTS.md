@@ -17,8 +17,9 @@ Consult `project_status.md` for the evidence, limits, and next task.
 ## Rules
 1. Work on ONE roadmap item at a time. Update the checkbox in `ROADMAP.md` when done.
 2. Keep the daemon dependency-light (stdlib first). Add a dependency only with a stated reason.
-3. All SQL lives in `daemon/src/tapasya/db.py`. Schema changes go in `schema.sql` with a
-   migration note (add a `meta` key `schema_version`; never drop user data silently).
+3. Core SQL lives in `daemon/src/tapasya/db.py`; lock SQL lives in `lock_store.py`. Base schema is
+   in `schema.sql`, and later schema changes go in `migrations.py` with a `meta.schema_version`
+   update. Never drop user data silently.
 4. Config comes only from `config/config.toml` (git-ignored). Never hardcode secrets or paths.
 5. Local API binds to `127.0.0.1`. Never `0.0.0.0` without authentication.
 6. **Follow `docs/PRIVACY.md`.** No hidden monitoring, camera/screen only with owner consent,
@@ -62,3 +63,4 @@ integrate only through the local API.
 - Phase 2 follow-up: the extension now reports whether the active tab is audible, and an audible allowed tab continues counting while the idle heuristic would otherwise stop it. Added a regression test. On 2026-10-11 the running daemon and API were checked: GitHub counted, Instagram did not, and the `lecture` YouTube title counted while other YouTube titles did not. The four-minute audible-lecture and Shorts checks still need a real Brave session.
 - Pre-Phase 3 cleanup: `db.connect()` records schema version `1`; the tracker handles SIGTERM and SIGINT by leaving its loop, closing the local API and database connection, and returning. Core tests cover both behaviors. The owner also verified that a YouTube Short does not count; a six-minute audible-lecture test and the Phase 1a accuracy/reboot checks remain.
 - The audible-lecture check passed: a Python tutorial produced 133 counted samples across 13 minutes, beyond the 180-second idle timeout. Phase 2 real-Brave verification is complete; only the Phase 1a stopwatch accuracy and reboot checks remain before Phase 3.
+- Phase 3a lock engine is integrated disabled/dry-run by default. Schema migration v2 adds `overrides` and `lock_events`; lock commands are exposed as `tapasya-lock`. Automated tests cover lock decisions, safety exclusions, warning delay, dry-run, close limits, overrides, migration, and fail-open errors. Run the manual dry-run checklist before any real closing.
