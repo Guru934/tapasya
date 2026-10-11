@@ -58,15 +58,13 @@ The implementation through Phase 2 is on `main` in commit `d57827e`
 - Instagram samples did not count.
 - A YouTube tab titled `lecture` counted; unrelated YouTube titles did not count because they did
   not contain configured study keywords.
-- The owner played a Python tutorial for three minutes and observed counted samples. This was not
-  long enough to verify audible playback beyond the default 180-second idle timeout.
+- An audible Python tutorial produced 133 counted samples across 13 minutes without input, which
+  verifies playback beyond the default 180-second idle timeout.
 - The owner opened a YouTube Short and observed uncounted samples.
 
 ## Known limits and deferred cleanup
 
 - Phase 1a still needs a full-session accuracy check against real study time and a reboot check.
-- Run an audible lecture for at least six minutes without mouse or keyboard input. Its samples
-  must continue to have `counted = 1` after the 180-second idle timeout.
 - The tracker handles SIGTERM/SIGINT by stopping its loop and closing its API server and database
   connection. Samples are committed immediately, so stopping the service does not lose
   already-recorded samples.

@@ -10,8 +10,8 @@ Therefore: **small steps, simple code, plain explanations, no clever abstraction
 
 ## Current state
 Phases 0, 1b, 1c are written (CLI, SQLite, sampler, idle heuristic, tests, systemd service + installer).
-Phase 2 is implemented and partially verified in real Brave. The owner must still complete the
-Phase 1a full-session accuracy and reboot checks, plus a six-minute audible-lecture check.
+Phase 2 is implemented and verified in real Brave. The owner must still complete the Phase 1a
+full-session accuracy and reboot checks.
 Consult `project_status.md` for the evidence, limits, and next task.
 
 ## Rules
@@ -61,3 +61,4 @@ integrate only through the local API.
 - Phase 2 added: rules.py, api.py (POST /v1/tab, GET /v1/status; POST requires chrome-extension:// Origin), tracker.decide(), extension/ (MV3). 9 pytest tests pass. Not yet tried in real Brave. Owner's existing config.toml lacks new optional keys; code uses defaults.
 - Phase 2 follow-up: the extension now reports whether the active tab is audible, and an audible allowed tab continues counting while the idle heuristic would otherwise stop it. Added a regression test. On 2026-10-11 the running daemon and API were checked: GitHub counted, Instagram did not, and the `lecture` YouTube title counted while other YouTube titles did not. The four-minute audible-lecture and Shorts checks still need a real Brave session.
 - Pre-Phase 3 cleanup: `db.connect()` records schema version `1`; the tracker handles SIGTERM and SIGINT by leaving its loop, closing the local API and database connection, and returning. Core tests cover both behaviors. The owner also verified that a YouTube Short does not count; a six-minute audible-lecture test and the Phase 1a accuracy/reboot checks remain.
+- The audible-lecture check passed: a Python tutorial produced 133 counted samples across 13 minutes, beyond the 180-second idle timeout. Phase 2 real-Brave verification is complete; only the Phase 1a stopwatch accuracy and reboot checks remain before Phase 3.

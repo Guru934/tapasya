@@ -9,7 +9,7 @@ and until the goal is met it restricts distracting apps. Your AI assistant knows
 keeps you accountable. A consent-gated online dashboard lets one trusted person (your partner)
 see your progress and send you motivation.
 
-**Status:** Phases 0, 1b, 1c are written (tracker, idle detection, tests, autostart). Phase 1a needs a full-session accuracy and reboot check on the real machine. Phase 2 (Brave extension + site rules) is implemented and partially verified in real Brave: GitHub counts, Instagram and Shorts do not, and YouTube counts only when its title has a study keyword. Verify an audible lecture for more than the 180-second idle timeout before starting Phase 3.
+**Status:** Phases 0, 1b, 1c are written (tracker, idle detection, tests, autostart). Phase 1a needs a full-session accuracy and reboot check on the real machine. Phase 2 (Brave extension + site rules) has been verified in real Brave: GitHub counts, Instagram and Shorts do not, and an audible Python tutorial counted for 13 minutes without input.
 **Personal use only.** Read `docs/PRIVACY.md` before building any remote feature.
 
 ## Features (planned, see ROADMAP.md)

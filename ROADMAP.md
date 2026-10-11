@@ -34,14 +34,14 @@ Data flow: sampler writes `samples` every N seconds -> minutes studied = counted
 - Done when: a full day of normal use gives study minutes within about 5% of reality, and survives reboot.
 
 ## Phase 2: Brave extension (know WHAT you study)
-- [x] MV3 extension in `extension/` sends `{domain, title, shorts, audible}` to `POST /v1/tab` (partially verified in real Brave)
+- [x] MV3 extension in `extension/` sends `{domain, title, shorts, audible}` to `POST /v1/tab` (verified in real Brave)
 - [x] Daemon stores `domain`/`title` on each sample (`api.py`, `tracker.py`)
 - [x] Rules engine (`rules.py`) from config: `allow` counts, `block` never counts, mixed sites (youtube.com)
       count only if the title matches `study_keywords`
 - [x] Count only when the Brave window is focused AND the active tab is allowed (`tracker.decide`)
 - Manual check on 2026-10-11: GitHub counted, Instagram and a YouTube Short did not, and YouTube
-  tabs titled `lecture` and `Python tutorial` counted. The three-minute tutorial was exactly the
-  default `idle_seconds`, so it does not verify audible playback past the idle timeout.
+  tabs titled `lecture` and `Python tutorial` counted. The audible Python tutorial produced 133
+  counted samples over 13 minutes, which verifies counting beyond the 180-second idle timeout.
 - Done when: Instagram in Brave adds 0 minutes, docs.python.org adds minutes, a lecture on
   YouTube counts through the idle timeout, and Shorts do not.
 
