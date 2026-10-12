@@ -93,6 +93,19 @@ def test_find_offenders_never_returns_auth_prompt_titles():
     assert lock.find_offenders(prompts, set()) == []
 
 
+def test_find_offenders_skips_unmapped_windows():
+    """Windows with missing or falsy 'mapped' field are skipped."""
+    windows = [
+        {"class": "discord", "address": "0x1", "title": "chat", "mapped": True},
+        {"class": "discord", "address": "0x2", "title": "chat", "mapped": False},
+        {"class": "discord", "address": "0x3", "title": "chat"},  # missing mapped
+        {"class": "discord", "address": "0x4", "title": "chat", "mapped": None},
+    ]
+    offenders = lock.find_offenders(windows, set())
+    # Only the first window (mapped: True) should be an offender
+    assert [w["address"] for w in offenders] == ["0x1"]
+
+
 def test_warn_then_close(tmp_path):
     cfg, closed, notes = mkcfg(tmp_path), [], []
     lock_engine = engine(cfg, lambda: WINDOWS, closed, notes)

@@ -55,6 +55,39 @@ Data flow: sampler writes `samples` every N seconds -> minutes studied = counted
 - [x] Run the dry-run integration checklist in `INTEGRATION.md` on real Hyprland
 - [x] Verify allowed apps, goal-met behavior, and delayed override in dry-run mode
 - [ ] Test real closing only after dry-run and Phase 1a accuracy/reboot checks pass
+### Phase 3a.1: Reliability gate (completed 2026-10-12)
+- [x] Configuration lookup precedence implemented and tested
+- [x] Lock-engine safety defect fixed (unmapped windows skipped)
+- [x] Test suite: 52 passed (includes config precedence and Hyprland recovery tests)
+### Phase 3a.2: Hyprland startup race fix (completed 2026-10-12)
+- [x] Root cause identified: `ensure_hypr_env()` ran once at startup, failed silently when
+      Hyprland runtime directory not yet available, causing indefinite empty window samples
+- [x] Fix: tracker re-discovers Hyprland instance on failure (30s interval), logs diagnostics
+      at controlled rate (max once/60s), skips empty samples, continues API/lock independently
+- [x] Test suite: 47 passed (10 new regression tests)
+- [x] Verified on real machine: no new empty samples after service restart, Brave domain
+      reporting works, warnings rate-limited
+- [ ] Cold-boot verification (service starts before Hyprland at login) — pending next reboot
+### Phase 3a.3: Brave extension hardening (completed 2026-10-12)
+- [x] `require_extension` default changed to `true` (fail closed) in config and code
+- [x] Heartbeat alarm creation made reliable with `ensureHeartbeat()` helper (recovery tested)
+- [x] Intermittent empty-domain reports fixed:
+    - Version counter prevents race conditions between async reports
+    - Focused window tracking ignores events from unfocused windows
+    - `WINDOW_ID_NONE` handled explicitly (no empty report)
+    - Internal pages (chrome://, brave://, new tab) return empty payload
+- [x] Test suite: 66 passed (52 Python + 14 JavaScript)
+- [x] Verified on real machine: `docs.python.org` counted, `chatgpt.com` uncounted, internal pages uncounted, focus transitions clean, Brave restart resumes reporting via heartbeat
+### Phase 3a.4: Persistent domain loss fix (completed 2026-10-12)
+- [x] Root cause: extension sent empty domain report on focus loss (`WINDOW_ID_NONE`); daemon `TabState.update()` overwrote valid domain with empty string
+- [x] Fix: extension no longer sends empty reports on focus loss; daemon `TabState.update()` ignores empty/whitespace domains, preserving last valid domain
+- [x] Test suite: 68 passed (54 Python + 14 JavaScript) with 2 new regression tests for TabState empty domain handling
+- [x] Verified on real machine: no empty-domain samples after restart, Brave study domains persist through focus transitions, no stale domains
+### Phase 3a.5: Explicit ineligible tab handling (completed 2026-10-12)
+- [x] Root cause: extension sent empty domain for internal pages; daemon ignored it, allowing stale study domain to persist up to 90s
+- [x] Fix: extension sends `eligible: false` for internal pages/new tabs; daemon `TabState.update()` treats `eligible: false` as explicit invalidation, immediately clearing tab state; focus loss (`WINDOW_ID_NONE`) no longer sends a report
+- [x] Test suite: 71 passed (57 Python + 14 JavaScript) with 4 new regression tests for `eligible` flag handling and backward compatibility
+- [x] Verified on real machine: `docs.python.org` counted; navigation to internal page immediately stops counting; return to study domain resumes counting; no stale domains
 ### Phase 3b: UI
 - [ ] Quickshell overlay: progress ring, minutes left, "goal met" unlock animation
 - [ ] Bar pill widget showing `done/goal`

@@ -11,7 +11,7 @@ idle_seconds = 180           # no mouse/window/title change for this long = idle
 # Hyprland window classes that CAN count as study (check with: hyprctl activewindow -j)
 study_window_classes = ["brave-browser", "Brave-browser"]
 browser_classes = ["brave-browser", "Brave-browser"]   # site rules apply only to these
-require_extension = false    # true = Brave counts ONLY when the extension reports an allowed site
+require_extension = true     # true = Brave counts ONLY when the extension reports an allowed site
 tab_stale_seconds = 90       # extension info older than this is ignored
 # Always-allowed apps (never locked) - used from Phase 3
 always_allowed_classes = ["kitty", "foot", "code", "Code", "com.microsoft.VSCode", "brave-browser", "Brave-browser"]

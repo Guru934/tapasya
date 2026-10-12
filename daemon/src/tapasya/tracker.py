@@ -20,34 +20,64 @@ from . import api, db, rules
 from .activity import ActivityMonitor, is_counted
 
 
-def ensure_hypr_env() -> None:
-    """Make hyprctl work from systemd/other shells by locating the running Hyprland instance."""
-    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-        return
+_HYPR_DISCOVERY_INTERVAL = 30.0  # seconds between Hyprland re-discovery attempts
+
+
+def ensure_hypr_env(force: bool = False) -> bool:
+    """Make hyprctl work by locating the running Hyprland instance.
+
+    Returns True if a valid instance signature was found (or already set),
+    False if Hyprland does not appear to be running.
+    """
+    if not force and os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        return True
     runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
     dirs = sorted(glob.glob(f"{runtime}/hypr/*/"), key=os.path.getmtime, reverse=True)
     if dirs:
         os.environ["HYPRLAND_INSTANCE_SIGNATURE"] = os.path.basename(dirs[0].rstrip("/"))
+        return True
+    # Clear any stale signature so we don't retry a dead instance
+    os.environ.pop("HYPRLAND_INSTANCE_SIGNATURE", None)
+    return False
 
 
-def _hyprctl_json(*args: str) -> dict:
+def _hyprctl_json(*args: str) -> tuple[dict, str | None]:
+    """Run hyprctl and return (parsed_json, error_message).
+
+    error_message is None on success, or a description of the failure.
+    """
     try:
-        out = subprocess.run(["hyprctl", *args, "-j"], capture_output=True, text=True, timeout=2)
-        return json.loads(out.stdout or "{}")
-    except (subprocess.SubprocessError, json.JSONDecodeError, FileNotFoundError):
-        return {}
+        out = subprocess.run(
+            ["hyprctl", *args, "-j"], capture_output=True, text=True, timeout=2
+        )
+        if out.returncode != 0:
+            err = (out.stderr or out.stdout or "hyprctl failed").strip()
+            return {}, f"hyprctl exit {out.returncode}: {err}"
+        return json.loads(out.stdout or "{}"), None
+    except FileNotFoundError:
+        return {}, "hyprctl not found in PATH"
+    except subprocess.TimeoutExpired:
+        return {}, "hyprctl timeout"
+    except json.JSONDecodeError as e:
+        return {}, f"hyprctl returned invalid JSON: {e}"
+    except subprocess.SubprocessError as e:
+        return {}, f"hyprctl subprocess error: {e}"
 
 
-def active_window() -> dict:
-    data = _hyprctl_json("activewindow")
-    return {"class": data.get("class", ""), "title": data.get("title", "")}
+def active_window() -> tuple[dict, str | None]:
+    data, err = _hyprctl_json("activewindow")
+    if err:
+        return {}, err
+    return {"class": data.get("class", ""), "title": data.get("title", "")}, None
 
 
-def cursor_pos() -> tuple | None:
-    data = _hyprctl_json("cursorpos")
+def cursor_pos() -> tuple[tuple[int, int] | None, str | None]:
+    data, err = _hyprctl_json("cursorpos")
+    if err:
+        return None, err
     if "x" in data and "y" in data:
-        return (data["x"], data["y"])
-    return None
+        return (data["x"], data["y"]), None
+    return None, "cursorpos missing x/y"
 
 
 def make_stop_handler(stop: threading.Event):
@@ -67,7 +97,7 @@ def decide(cls: str, idle: bool, tab: dict | None, cfg: dict) -> tuple[bool, str
     if not counted or cls not in browsers:
         return counted, None
     if tab is None:
-        return (not t.get("require_extension", False)), None
+        return (not t.get("require_extension", True)), None
     ok, _reason = rules.classify(tab["domain"], tab["title"], tab["shorts"], cfg.get("study_sites", {}))
     return ok, tab["domain"] or None
 
@@ -111,12 +141,34 @@ def run(cfg: dict) -> None:
     except Exception as e:
         print(f"[tapasya] WARNING: lock engine not started (failing open): {e}", file=sys.stderr, flush=True)
 
+    last_hypr_error_log = 0.0
+    last_discovery_attempt = 0.0
+
     try:
         print(f"[tapasya] tracking every {step}s, idle after {cfg['tracking']['idle_seconds']}s.")
         while not stop.is_set():
-            win = active_window()
+            now = time.monotonic()
+            win, win_err = active_window()
             cls, title = win.get("class", ""), win.get("title", "")
-            idle = monitor.update(cursor_pos(), cls, title, time.monotonic())
+
+            # If window detection failed, try to re-discover Hyprland
+            if win_err or not cls:
+                if now - last_discovery_attempt >= _HYPR_DISCOVERY_INTERVAL:
+                    if ensure_hypr_env(force=True):
+                        print("[tapasya] Hyprland instance re-discovered", flush=True)
+                    else:
+                        print("[tapasya] WARNING: Hyprland not found; will retry", file=sys.stderr, flush=True)
+                    last_discovery_attempt = now
+                # Log the error at most once per 60 seconds to avoid journal spam
+                if win_err and now - last_hypr_error_log >= 60.0:
+                    print(f"[tapasya] hyprctl error: {win_err}", file=sys.stderr, flush=True)
+                    last_hypr_error_log = now
+                # Don't record a sample when we can't determine the window
+                stop.wait(step)
+                continue
+
+            cursor, cursor_err = cursor_pos()
+            idle = monitor.update(cursor, cls, title, now)
             counted, domain = decide(cls, idle, state.current(), cfg)
             db.add_sample(conn, cls, title, domain, counted)
             stop.wait(step)

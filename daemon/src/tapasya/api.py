@@ -19,7 +19,18 @@ class TabState:
         self._lock = threading.Lock()
         self._data: dict | None = None
 
-    def update(self, domain: str, title: str, shorts: bool, audible: bool = False, now: float | None = None) -> None:
+    def update(self, domain: str, title: str, shorts: bool, audible: bool = False, eligible: bool | None = None, now: float | None = None) -> None:
+        # If explicitly marked ineligible (e.g., internal page), clear the state immediately.
+        if eligible is False:
+            with self._lock:
+                self._data = None
+            return
+        # Ignore empty or whitespace-only domain reports without explicit eligible flag.
+        # These come from focus loss (WINDOW_ID_NONE) where no report should have been sent,
+        # but we defensively ignore them to preserve the last valid state.
+        if not domain or not domain.strip():
+            return
+        # Valid domain - update state.
         with self._lock:
             self._data = {"domain": domain, "title": title, "shorts": shorts, "audible": audible,
                           "ts": time.monotonic() if now is None else now}
@@ -74,9 +85,15 @@ def make_server(state: TabState, host: str, port: int, status_fn=None) -> Thread
                 title = str(data.get("title", ""))[:200]
                 shorts = bool(data.get("shorts", False))
                 audible = bool(data.get("audible", False))
+                # eligible is optional; None means not provided (backward compat)
+                eligible = data.get("eligible", None)
+                if isinstance(eligible, bool):
+                    pass  # use as-is
+                else:
+                    eligible = None
             except (ValueError, TypeError):
                 return self._reply(400)
-            state.update(domain, title, shorts, audible)
+            state.update(domain, title, shorts, audible, eligible)
             self._reply(204)
 
         def do_GET(self):

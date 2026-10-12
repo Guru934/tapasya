@@ -108,7 +108,7 @@ def find_offenders(clients: list, allowed: set) -> list:
     for client in clients or []:
         window_class = (client.get("class") or "").lower()
         title = (client.get("title") or "").lower()
-        if not window_class or not client.get("address") or client.get("mapped") is False:
+        if not window_class or not client.get("address") or not client.get("mapped"):
             continue
         if window_class not in allowed_classes and not any(term in title for term in SAFETY_TITLE_TERMS):
             offenders.append(client)
